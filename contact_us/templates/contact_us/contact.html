@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Contact Us!</title>
+</head>
+<body>
+
+<h2>Contact with us</h2>
+
+{% if success %}
+    <p style ="color:#c455ce;">Message was sent!</p>
+{% endif %}
+
+<form method="post">
+    {% csrf_token %}
+    {{form.as_p}}
+    <button type="submit">Send</button>
+</form>
+
+</body>  
+</html>
