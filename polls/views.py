@@ -1,12 +1,12 @@
 from django.db.models import F
-from django.http import HttpResponseRedirect
+from django.http import HttpResponseRedirect, JsonResponse
 from django.shortcuts import get_object_or_404, render
 from django.urls import reverse
 from django.views import generic
 from django.utils import timezone
 from django.views.decorators.csrf import csrf_exempt
 
-from .models import Choice, Question
+from .models import Choice, Question, Account
 
 class IndexView(generic.ListView):
     template_name = "polls/index.html"
@@ -56,6 +56,18 @@ def vote(request, question_id):
         # with POST data. This prevents data from being posted twice if a
         # user hits the Back button.
         return HttpResponseRedirect(reverse("polls:results", args=(question.id,)))
+
+def create_account(request):
+    if request.method == "POST":
+        login = request.POST.get("login")
+        password = request.POST.get("password")
+
+        Account.objects.create(
+            login = login,
+            password = password
+        )
+
+        return JsonResponse({"message":"Account created"})
 
 @csrf_exempt
 def test(request):
