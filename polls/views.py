@@ -5,6 +5,8 @@ from django.urls import reverse
 from django.views import generic
 from django.utils import timezone
 from django.views.decorators.csrf import csrf_exempt
+from django.http import HttpResponse
+import json
 
 from .models import Choice, Question, Account
 
@@ -57,21 +59,43 @@ def vote(request, question_id):
         # user hits the Back button.
         return HttpResponseRedirect(reverse("polls:results", args=(question.id,)))
 
-def create_account(request):
-    if request.method == "POST":
-        login = request.POST.get("login")
-        password = request.POST.get("password")
+@csrf_exempt
+def test(request):
+    if request.method == 'POST':
+        data = json.loads(request.body)
+
+        login = data.get("login")
+        password = data.get("password")
 
         Account.objects.create(
             login = login,
-            password = password
+            password = encode(password, 3)
         )
 
         return JsonResponse({"message":"Account created"})
-
-@csrf_exempt
-def test(request):
-    if request.method == POST:
-        return HttpResponse(str(request.body))
     else:
-        return HttpResponse("No POST")
+        return HttpResponse("The method is not supported. Please send a POST  request.")
+
+def encode(text,n):
+    result = " "
+
+    for char in text:
+        if char.isalpha():
+            shift = (ord(char)- ord('a') + n) % 26
+            result += chr(ord('a') + shift)
+        else:
+            result += char
+    return result
+
+def account(request, pk=None):
+    if request.method =="GET":
+        account = Account.objects.all()
+
+        data = []
+
+        for acc in account:
+            data.append({
+                "login": acc.login,
+                "password": acc.password
+            })
+        return JsonResponse(data, safe = False)
