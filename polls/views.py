@@ -87,15 +87,52 @@ def encode(text,n):
             result += char
     return result
 
+@csrf_exempt
 def account(request, pk=None):
-    if request.method =="GET":
-        account = Account.objects.all()
+    if request.method == "GET":
+        if pk is None:
+            accounts = Account.objects.all()
+            data = [
+                {"id":a.id, "login":a.login, "password":a.password}
+                for a in accounts
+            ]
+            return JsonResponse(data,safe=False)
+        else:
+            try:
+                a = Account.objects.get(pk=pk)
+                data = {
+                    "id":a.id,
+                    "login":a.login,
+                    "password":a.password,
+                }
+                return JsonResponse(data)
+            except Account.DoesNotExist:
+                return JsonResponse({"error":"Not Found"}, status = 404)
+    elif request.method == "PATCH":
+        try:
+            a = Account.objects.get(pk=pk)
+            body = json.loads(request.body)
 
-        data = []
+            if "login" in body:
+                a.login = body["login"]
+            if "password" in body:
+                a.password = body["password"]
+            
+            a.save()
 
-        for acc in account:
-            data.append({
-                "login": acc.login,
-                "password": acc.password
+            return JsonResponse({
+                "id": a.id,
+                "login": a.login,
+                "password": a.password,
             })
-        return JsonResponse(data, safe = False)
+
+        except Account.DoesNotExist:
+            return JsonResponse({"error":"Not Found"}, status = 404)
+
+    elif request.method == "DELETE":
+        try:
+            a = Account.objects.get(pk=pk)
+            a.delete()
+            return JsonResponse({"message":"Deleted"})
+        except Account.DoesNotExist:
+            return JsonResponse({"error":"Not Found"}, status = 404)                                          
